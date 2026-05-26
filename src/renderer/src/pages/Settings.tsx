@@ -94,6 +94,58 @@ export default function Settings(): JSX.Element {
         </section>
 
         <section style={styles.section}>
+          <h3 style={styles.sectionTitle}>Data</h3>
+
+          <SettingRow
+            label="Export solves"
+            description="Save all your solve data as JSON or CSV"
+          >
+            <div style={{ display: 'flex', gap: 8 }}>
+              <ActionButton label="JSON" onClick={async () => {
+                const path = await window.api.exportJson()
+                if (path) { setSaved(true); setTimeout(() => setSaved(false), 1500) }
+              }} />
+              <ActionButton label="CSV" onClick={async () => {
+                const path = await window.api.exportCsv()
+                if (path) { setSaved(true); setTimeout(() => setSaved(false), 1500) }
+              }} />
+            </div>
+          </SettingRow>
+
+          <SettingRow
+            label="Backup database"
+            description="Create a full backup of your database"
+          >
+            <ActionButton label="Backup" onClick={async () => {
+              await window.api.createBackup()
+              setSaved(true); setTimeout(() => setSaved(false), 1500)
+            }} />
+          </SettingRow>
+
+          <SettingRow
+            label="Restore from backup"
+            description="Replace current data with a backup file"
+          >
+            <ActionButton label="Restore" onClick={async () => {
+              const ok = await window.api.restoreBackup()
+              if (ok) { window.location.reload() }
+            }} />
+          </SettingRow>
+        </section>
+
+        <section style={styles.section}>
+          <h3 style={styles.sectionTitle}>Keyboard Shortcuts</h3>
+          <div style={styles.shortcutList}>
+            <ShortcutRow keys="Space" description="Start / stop timer" />
+            <ShortcutRow keys="Escape" description="Cancel current solve" />
+            <ShortcutRow keys="1" description="No penalty" />
+            <ShortcutRow keys="2" description="+2 penalty" />
+            <ShortcutRow keys="3" description="DNF" />
+            <ShortcutRow keys="Delete" description="Delete last solve" />
+          </div>
+        </section>
+
+        <section style={styles.section}>
           <h3 style={styles.sectionTitle}>About</h3>
           <div style={styles.aboutCard}>
             <p style={styles.aboutItem}><span style={styles.aboutLabel}>App</span> Rubik's Tracker</p>
@@ -120,6 +172,23 @@ function SettingRow({ label, description, children }: {
         <span style={styles.desc}>{description}</span>
       </div>
       <div style={styles.rowControl}>{children}</div>
+    </div>
+  )
+}
+
+function ActionButton({ label, onClick }: { label: string; onClick: () => void }) {
+  return (
+    <button onClick={onClick} style={styles.actionBtn}>
+      {label}
+    </button>
+  )
+}
+
+function ShortcutRow({ keys, description }: { keys: string; description: string }) {
+  return (
+    <div style={styles.shortcutRow}>
+      <kbd style={styles.kbd}>{keys}</kbd>
+      <span style={styles.shortcutDesc}>{description}</span>
     </div>
   )
 }
@@ -266,6 +335,45 @@ const styles: Record<string, React.CSSProperties> = {
   aboutLabel: {
     color: 'var(--text-muted)',
     minWidth: 48,
+  },
+  actionBtn: {
+    background: 'var(--bg-elevated)',
+    border: '1px solid var(--border)',
+    borderRadius: 6,
+    color: 'var(--text-primary)',
+    fontSize: 13,
+    padding: '6px 14px',
+    cursor: 'pointer',
+    fontWeight: 500,
+    transition: 'background 0.15s',
+  },
+  shortcutList: {
+    background: 'var(--bg-elevated)',
+    border: '1px solid var(--border)',
+    borderRadius: 8,
+    padding: '4px 16px',
+  },
+  shortcutRow: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: 16,
+    padding: '10px 0',
+    borderBottom: '1px solid var(--border)',
+  },
+  kbd: {
+    background: 'var(--bg-base)',
+    border: '1px solid var(--border)',
+    borderRadius: 4,
+    padding: '2px 8px',
+    fontSize: 12,
+    fontFamily: 'var(--font-mono)',
+    color: 'var(--text-primary)',
+    minWidth: 60,
+    textAlign: 'center' as const,
+  },
+  shortcutDesc: {
+    fontSize: 13,
+    color: 'var(--text-muted)',
   },
   muted: {
     color: 'var(--text-muted)',

@@ -49,7 +49,25 @@ const api = {
   setSetting: (key: string, value: string) =>
     ipcRenderer.invoke('db:settings:set', key, value),
   getAllSettings: () =>
-    ipcRenderer.invoke('db:settings:all')
+    ipcRenderer.invoke('db:settings:all'),
+
+  // Data export
+  exportJson: () =>
+    ipcRenderer.invoke('db:export:json'),
+  exportCsv: (filters?: {
+    sessionId?: number
+    cubeType?: string
+    dateFrom?: number
+    dateTo?: number
+  }) => ipcRenderer.invoke('db:export:csv', filters),
+
+  // Backup / Restore
+  createBackup: () =>
+    ipcRenderer.invoke('db:backup:create'),
+  listBackups: () =>
+    ipcRenderer.invoke('db:backup:list'),
+  restoreBackup: () =>
+    ipcRenderer.invoke('db:backup:restore')
 }
 
 if (process.contextIsolated) {

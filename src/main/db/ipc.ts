@@ -1,4 +1,4 @@
-import { ipcMain } from 'electron'
+import { ipcMain, dialog } from 'electron'
 import {
   createSession,
   getSessions,
@@ -12,8 +12,15 @@ import {
   upsertAlgorithmProgress,
   getSetting,
   setSetting,
-  getAllSettings
+  getAllSettings,
+  exportDataAsJson,
+  exportSolvesAsCsv,
+  createBackup,
+  restoreBackup,
+  listBackups
 } from './queries'
+import { initDatabase } from './schema'
+import { writeFileSync } from 'fs'
 
 export function registerIpcHandlers(): void {
   // Sessions
@@ -62,4 +69,46 @@ export function registerIpcHandlers(): void {
   ipcMain.handle('db:settings:all', () =>
     getAllSettings()
   )
+
+  // Data export
+  ipcMain.handle('db:export:json', async (event) => {
+    const data = exportDataAsJson()
+    const { canceled, filePath } = await dialog.showSaveDialog(
+      { title: 'Export data', defaultPath: 'rubiks-tracker-export.json', filters: [{ name: 'JSON', extensions: ['json'] }] }
+    )
+    if (canceled || !filePath) return null
+    writeFileSync(filePath, JSON.stringify(data, null, 2))
+    return filePath
+  })
+
+  ipcMain.handle('db:export:csv', async (event, filters?) => {
+    const csv = exportSolvesAsCsv(filters)
+    const { canceled, filePath } = await dialog.showSaveDialog(
+      { title: 'Export solves', defaultPath: 'rubiks-tracker-solves.csv', filters: [{ name: 'CSV', extensions: ['csv'] }] }
+    )
+    if (canceled || !filePath) return null
+    writeFileSync(filePath, csv)
+    return filePath
+  })
+
+  // Backup / Restore
+  ipcMain.handle('db:backup:create', () =>
+    createBackup()
+  )
+
+  ipcMain.handle('db:backup:list', () =>
+    listBackups()
+  )
+
+  ipcMain.handle('db:backup:restore', async () => {
+    const { canceled, filePaths } = await dialog.showOpenDialog(
+      { title: 'Restore backup', filters: [{ name: 'Database', extensions: ['db'] }], properties: ['openFile'] }
+    )
+    if (canceled || filePaths.length === 0) return null
+    const success = restoreBackup(filePaths[0])
+    if (success) {
+      initDatabase() // Reopen the restored DB
+    }
+    return success
+  })
 }

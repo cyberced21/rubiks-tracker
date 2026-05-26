@@ -1,4 +1,7 @@
-import { getDb } from './schema'
+import { getDb, getDbPath } from './schema'
+import { app } from 'electron'
+import { join } from 'path'
+import { copyFileSync, existsSync } from 'fs'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -178,4 +181,76 @@ export function setSetting(key: string, value: string): void {
 export function getAllSettings(): Record<string, string> {
   const rows = getDb().prepare('SELECT key, value FROM settings').all() as { key: string; value: string }[]
   return Object.fromEntries(rows.map((r) => [r.key, r.value]))
+}
+
+// ── Data Export ─────────────────────────────────────────────────────────────
+
+export interface ExportData {
+  version: 1
+  exported_at: number
+  sessions: Session[]
+  solves: Solve[]
+  algorithm_progress: AlgorithmProgress[]
+  settings: Record<string, string>
+}
+
+export function exportDataAsJson(): ExportData {
+  const db = getDb()
+  return {
+    version: 1,
+    exported_at: Date.now(),
+    sessions: db.prepare('SELECT * FROM sessions ORDER BY created_at ASC').all() as Session[],
+    solves: db.prepare('SELECT * FROM solves ORDER BY created_at ASC').all() as Solve[],
+    algorithm_progress: db.prepare('SELECT * FROM algorithm_progress').all() as AlgorithmProgress[],
+    settings: getAllSettings(),
+  }
+}
+
+export function exportSolvesAsCsv(filters?: SolveFilters): string {
+  const solves = filters ? getSolves(filters) : getDb().prepare('SELECT * FROM solves ORDER BY created_at ASC').all() as Solve[]
+  const header = 'id,session_id,cube_type,time_ms,penalty,scramble,comment,created_at'
+  const rows = solves.map((s) => {
+    const comment = (s.comment ?? '').replace(/"/g, '""')
+    const scramble = s.scramble.replace(/"/g, '""')
+    return `${s.id},${s.session_id},${s.cube_type},${s.time_ms},${s.penalty},"${scramble}","${comment}",${s.created_at}`
+  })
+  return [header, ...rows].join('\n')
+}
+
+// ── Backup / Restore ────────────────────────────────────────────────────────
+
+export function createBackup(): string {
+  const db = getDb()
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+  const backupDir = join(app.getPath('userData'), 'backups')
+  const { mkdirSync } = require('fs')
+  mkdirSync(backupDir, { recursive: true })
+  const backupPath = join(backupDir, `rubiks-tracker-${timestamp}.db`)
+  db.backup(backupPath)
+  return backupPath
+}
+
+export function restoreBackup(backupPath: string): boolean {
+  if (!existsSync(backupPath)) return false
+  const dbPath = getDbPath()
+  // Close current DB, copy backup over, reopen
+  getDb().close()
+  copyFileSync(backupPath, dbPath)
+  // Caller must reinit the database after restore
+  return true
+}
+
+export function listBackups(): { path: string; name: string; created: number }[] {
+  const backupDir = join(app.getPath('userData'), 'backups')
+  const { readdirSync, statSync, mkdirSync } = require('fs')
+  mkdirSync(backupDir, { recursive: true })
+  const files = readdirSync(backupDir) as string[]
+  return files
+    .filter((f: string) => f.endsWith('.db'))
+    .map((f: string) => {
+      const fullPath = join(backupDir, f)
+      const stat = statSync(fullPath)
+      return { path: fullPath, name: f, created: stat.mtimeMs }
+    })
+    .sort((a: { created: number }, b: { created: number }) => b.created - a.created)
 }
