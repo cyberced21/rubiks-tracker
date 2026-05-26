@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(ls node_modules/.bin/electron*)",
+      "Bash(./node_modules/.bin/electron-rebuild -f -w better-sqlite3)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('version:', d['version']\\); print\\('install script:', d.get\\('scripts',{}\\).get\\('install',''\\)\\)\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('electron version:', d['version']\\)\")",
+      "Bash(node ../../node_modules/prebuild-install/bin.js --runtime electron --target 31.7.7 --arch x64 --verbose)",
+      "Bash(npm view:*)",
+      "Bash(npx rimraf:*)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(cmd /c \"rmdir /s /q D:\\\\GitHub\\\\rubiks-tracker\\\\node_modules\")",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('version:', d['version']\\)\")",
+      "Bash(node -e \"const db = require\\('better-sqlite3'\\)\\(':memory:'\\); db.exec\\('CREATE TABLE t \\(x TEXT\\)'\\); db.prepare\\('INSERT INTO t VALUES \\(?\\)'\\).run\\('hello'\\); console.log\\(db.prepare\\('SELECT * FROM t'\\).all\\(\\)\\);\")",
+      "Bash(npm run:*)",
+      "Bash(node node_modules/electron/install.js)",
+      "Bash(xargs grep:*)",
+      "Bash(node -e ':*)",
+      "Bash(python:*)",
+      "Bash(npx tsc:*)",
+      "mcp__plugin_context-mode_context-mode__ctx_batch_execute"
+    ]
+  }
+}

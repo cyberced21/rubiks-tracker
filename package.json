@@ -1,0 +1,50 @@
+{
+  "name": "rubiks-tracker",
+  "version": "1.0.0",
+  "description": "Personal Rubik's cube solve tracker",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "build:win": "npm run build && electron-builder --win --config",
+    "postinstall": "node scripts/postinstall.js"
+  },
+  "build": {
+    "appId": "com.rubiks-tracker",
+    "productName": "Rubiks Tracker",
+    "directories": {
+      "output": "dist"
+    },
+    "files": ["out/**/*"],
+    "win": {
+      "target": "nsis"
+    },
+    "nodeGypRebuild": false
+  },
+  "dependencies": {
+    "@electron-toolkit/preload": "^3.0.0",
+    "@electron-toolkit/utils": "^3.0.0",
+    "better-sqlite3": "^12.9.0",
+    "cubing": "^0.20.0",
+    "lucide-react": "^0.427.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.0",
+    "zustand": "^4.5.4"
+  },
+  "devDependencies": {
+    "@electron-toolkit/tsconfig": "^1.0.1",
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "^20.16.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "electron": "^31.3.0",
+    "electron-builder": "^24.13.3",
+    "@electron/rebuild": "^3.6.0",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.0"
+  }
+}
