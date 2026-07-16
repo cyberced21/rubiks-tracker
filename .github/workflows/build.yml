@@ -22,13 +22,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Build
+        run: npm run build
+
       - name: Run tests
         run: npm test
 
-      - name: Build and package
+      - name: Package windows
         run: npm run build:win
+
+      - name: Package linux
+        run: npm run build:linux
 
       - name: Upload installer to release
         uses: softprops/action-gh-release@v2
         with:
           files: dist/*.exe
+          files: dist/*.AppImage
