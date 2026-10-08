@@ -28,3 +28,6 @@ Desktop.ini
 
 # electron-vite temp config bundles
 electron.vite.config.*.mjs
+
+# Claude Code local settings
+.claude/settings.local.json

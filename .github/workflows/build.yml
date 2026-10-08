@@ -52,6 +52,16 @@ jobs:
 
       - name: Package
         run: pnpm ${{ matrix.script }}
+        env:
+          # Windows release builds are signed with Azure Artifact Signing when
+          # configured (see README). Signing is skipped while the variable is empty.
+          AZURE_SIGNING_ENDPOINT: ${{ github.event_name == 'release' && vars.AZURE_SIGNING_ENDPOINT || '' }}
+          AZURE_SIGNING_ACCOUNT: ${{ vars.AZURE_SIGNING_ACCOUNT }}
+          AZURE_SIGNING_CERT_PROFILE: ${{ vars.AZURE_SIGNING_CERT_PROFILE }}
+          AZURE_SIGNING_PUBLISHER: ${{ vars.AZURE_SIGNING_PUBLISHER }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
 
       - name: Upload build artifact
         if: github.event_name != 'release'

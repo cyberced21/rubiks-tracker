@@ -1,6 +1,6 @@
 {
   "extends": "@electron-toolkit/tsconfig/tsconfig.node.json",
-  "include": ["electron.vite.config.*", "vitest.config.*", "src/main/**/*", "src/preload/**/*"],
+  "include": ["electron.vite.config.*", "vitest.config.*", "electron-builder.ts", "src/main/**/*", "src/preload/**/*"],
   "compilerOptions": {
     "noEmit": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
