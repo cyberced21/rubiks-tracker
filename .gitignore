@@ -22,3 +22,9 @@ Desktop.ini
 
 # Electron
 *.unpacked
+
+# TypeScript
+*.tsbuildinfo
+
+# electron-vite temp config bundles
+electron.vite.config.*.mjs

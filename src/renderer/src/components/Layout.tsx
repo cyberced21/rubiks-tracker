@@ -1,4 +1,5 @@
-import { Outlet } from 'react-router-dom'
+import type { JSX } from 'react'
+import { Outlet } from 'react-router'
 import Sidebar from './Sidebar'
 
 export default function Layout(): JSX.Element {

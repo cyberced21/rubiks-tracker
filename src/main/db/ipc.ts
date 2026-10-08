@@ -1,4 +1,4 @@
-import { ipcMain, dialog } from 'electron'
+import { ipcMain, dialog, BrowserWindow, type IpcMainInvokeEvent, type OpenDialogOptions, type SaveDialogOptions } from 'electron'
 import {
   createSession,
   getSessions,
@@ -73,7 +73,7 @@ export function registerIpcHandlers(): void {
   // Data export
   ipcMain.handle('db:export:json', async (event) => {
     const data = exportDataAsJson()
-    const { canceled, filePath } = await dialog.showSaveDialog(
+    const { canceled, filePath } = await showSaveDialog(event,
       { title: 'Export data', defaultPath: 'rubiks-tracker-export.json', filters: [{ name: 'JSON', extensions: ['json'] }] }
     )
     if (canceled || !filePath) return null
@@ -83,7 +83,7 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle('db:export:csv', async (event, filters?) => {
     const csv = exportSolvesAsCsv(filters)
-    const { canceled, filePath } = await dialog.showSaveDialog(
+    const { canceled, filePath } = await showSaveDialog(event,
       { title: 'Export solves', defaultPath: 'rubiks-tracker-solves.csv', filters: [{ name: 'CSV', extensions: ['csv'] }] }
     )
     if (canceled || !filePath) return null
@@ -100,8 +100,8 @@ export function registerIpcHandlers(): void {
     listBackups()
   )
 
-  ipcMain.handle('db:backup:restore', async () => {
-    const { canceled, filePaths } = await dialog.showOpenDialog(
+  ipcMain.handle('db:backup:restore', async (event) => {
+    const { canceled, filePaths } = await showOpenDialog(event,
       { title: 'Restore backup', filters: [{ name: 'Database', extensions: ['db'] }], properties: ['openFile'] }
     )
     if (canceled || filePaths.length === 0) return null
@@ -111,4 +111,15 @@ export function registerIpcHandlers(): void {
     }
     return success
   })
+}
+
+// Parent dialogs to the requesting window so they are modal to the app
+function showSaveDialog(event: IpcMainInvokeEvent, options: SaveDialogOptions) {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  return win ? dialog.showSaveDialog(win, options) : dialog.showSaveDialog(options)
+}
+
+function showOpenDialog(event: IpcMainInvokeEvent, options: OpenDialogOptions) {
+  const win = BrowserWindow.fromWebContents(event.sender)
+  return win ? dialog.showOpenDialog(win, options) : dialog.showOpenDialog(options)
 }

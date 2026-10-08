@@ -3,13 +3,20 @@ name: Build and Release
 on:
   release:
     types: [created]
+  pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     strategy:
+      fail-fast: false
       matrix:
         include:
           - os: windows-latest
@@ -22,26 +29,40 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
         with:
-          node-version: 20
-          cache: npm
+          node-version: 24
+          cache: pnpm
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: npm run build
+      - name: Typecheck
+        run: pnpm typecheck
 
       - name: Run tests
-        run: npm test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
 
       - name: Package
-        run: npm run ${{ matrix.script }}
+        run: pnpm ${{ matrix.script }}
+
+      - name: Upload build artifact
+        if: github.event_name != 'release'
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.os }}-installer
+          path: ${{ matrix.artifact }}
+          retention-days: 7
 
       - name: Upload installer to release
-        uses: softprops/action-gh-release@v2
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v3
         with:
           files: ${{ matrix.artifact }}

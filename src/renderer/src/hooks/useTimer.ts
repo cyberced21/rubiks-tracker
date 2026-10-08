@@ -106,8 +106,7 @@ export function useTimer({
       // Auto-DNF at 17s
       if (elapsed >= 17_000 && phaseRef.current === 'inspection') {
         stopInspection()
-        phaseRef.current = 'stopped'
-        setPhaseState('stopped')
+        setPhase('stopped')
         setFinalTimeMs(null)
         onSolveCompleteRef.current(0, 'dnf')
       }
@@ -128,8 +127,7 @@ export function useTimer({
     const elapsed = Date.now() - runStartRef.current!
     setDisplayMs(elapsed)
     setFinalTimeMs(elapsed)
-    phaseRef.current = 'stopped'
-    setPhaseState('stopped')
+    setPhase('stopped')
     onSolveCompleteRef.current(elapsed, 'none')
   }, [stopRaf])
 
@@ -152,10 +150,8 @@ export function useTimer({
 
       if (phase === 'stopped') {
         // Any keydown on stopped → reset to idle
-        phaseRef.current = 'idle'
-        setPhaseState('idle')
-        spacebarRef.current = 'up'
-        setSpacebarState('up')
+        setPhase('idle')
+        setSpacer('up')
         setDisplayMs(0)
         setInspectionElapsed(0)
         setInspectionPenalty('none')
@@ -165,12 +161,10 @@ export function useTimer({
       }
 
       if (sb === 'up') {
-        spacebarRef.current = 'holding'
-        setSpacebarState('holding')
+        setSpacer('holding')
         clearHold()
         holdTimerRef.current = setTimeout(() => {
-          spacebarRef.current = 'ready'
-          setSpacebarState('ready')
+          setSpacer('ready')
         }, holdThresholdMs)
       }
     },
@@ -193,14 +187,12 @@ export function useTimer({
 
       if (sb === 'holding') {
         // Released before threshold — cancel
-        spacebarRef.current = 'up'
-        setSpacebarState('up')
+        setSpacer('up')
         return
       }
 
       if (sb === 'ready') {
-        spacebarRef.current = 'up'
-        setSpacebarState('up')
+        setSpacer('up')
 
         if (phase === 'inspection') {
           // Read current inspection penalty from ref state
@@ -211,26 +203,22 @@ export function useTimer({
             elapsed >= 17_000 ? 'dnf' : elapsed >= 15_000 ? '+2' : 'none'
           stopInspection()
           if (pen === 'dnf') {
-            phaseRef.current = 'stopped'
-            setPhaseState('stopped')
+            setPhase('stopped')
             setFinalTimeMs(null)
             onSolveCompleteRef.current(0, 'dnf')
           } else {
             setInspectionPenalty(pen as 'none' | '+2' | 'dnf')
             // Store penalty for when solve is saved
-            phaseRef.current = 'running'
-            setPhaseState('running')
+            setPhase('running')
             startRaf()
           }
         } else {
           // idle → start
           if (inspectionEnabled) {
-            phaseRef.current = 'inspection'
-            setPhaseState('inspection')
+            setPhase('inspection')
             startInspection()
           } else {
-            phaseRef.current = 'running'
-            setPhaseState('running')
+            setPhase('running')
             setInspectionPenalty('none')
             startRaf()
           }
@@ -262,10 +250,8 @@ export function useTimer({
     clearHold()
     stopRaf()
     stopInspection()
-    phaseRef.current = 'idle'
-    spacebarRef.current = 'up'
-    setPhaseState('idle')
-    setSpacebarState('up')
+    setPhase('idle')
+    setSpacer('up')
     setDisplayMs(0)
     setInspectionElapsed(0)
     setInspectionPenalty('none')

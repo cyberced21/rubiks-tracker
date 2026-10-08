@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, type JSX } from 'react'
 import { ChevronDown, ChevronRight, Trophy } from 'lucide-react'
 import {
   buildSingleLeaderboard,
@@ -8,7 +8,7 @@ import {
   type AoNEntry,
   type SessionEntry
 } from '../utils/stats'
-import { formatTime, formatSolveTime, effectiveTime } from '../utils/time'
+import { formatTime, formatSolveTime } from '../utils/time'
 import type { Solve, Session } from '../types'
 
 type Tab = 'single' | 'ao5' | 'ao12' | 'session'

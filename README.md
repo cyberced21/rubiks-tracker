@@ -19,18 +19,22 @@ A personal Rubik's cube solve tracker built with Electron, React, and TypeScript
 
 ## Getting Started
 
+Requires Node.js 22.12+ and [pnpm](https://pnpm.io) (`corepack enable` picks up the pinned version).
+
 ```bash
 # Install dependencies
-npm install
+pnpm install
 
 # Run in development mode
-npm run dev
+pnpm dev
 
-# Run tests
-npm test
+# Typecheck and run tests
+pnpm typecheck
+pnpm test
 
-# Build for Windows
-npm run build:win
+# Build installers
+pnpm build && pnpm build:win    # Windows (NSIS)
+pnpm build && pnpm build:linux  # Linux (AppImage)
 ```
 
 ## Download
@@ -42,8 +46,7 @@ Grab the latest installer from the [Releases](https://github.com/cyberced21/rubi
 | Layer | Technology |
 |-------|-----------|
 | Shell | Electron + electron-vite |
-| UI | React 18 + TypeScript |
-| State | Zustand |
+| UI | React 19 + TypeScript |
 | Database | better-sqlite3 |
 | Icons | Lucide React |
 | Testing | Vitest |

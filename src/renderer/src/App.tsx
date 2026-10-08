@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import type { JSX } from 'react'
+import { Routes, Route, Navigate } from 'react-router'
 import Layout from './components/Layout'
 import Timer from './pages/Timer'
 import Leaderboard from './pages/Leaderboard'
