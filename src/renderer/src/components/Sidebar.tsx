@@ -1,4 +1,5 @@
-import { NavLink } from 'react-router-dom'
+import type { JSX } from 'react'
+import { NavLink } from 'react-router'
 import { Timer, Trophy, BookOpen, RotateCcw, Settings } from 'lucide-react'
 
 const NAV_ITEMS = [

@@ -22,3 +22,12 @@ Desktop.ini
 
 # Electron
 *.unpacked
+
+# TypeScript
+*.tsbuildinfo
+
+# electron-vite temp config bundles
+electron.vite.config.*.mjs
+
+# Claude Code local settings
+.claude/settings.local.json

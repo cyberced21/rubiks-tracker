@@ -1,4 +1,5 @@
-import { Outlet } from 'react-router-dom'
+import { Suspense, type JSX } from 'react'
+import { Outlet } from 'react-router'
 import Sidebar from './Sidebar'
 
 export default function Layout(): JSX.Element {
@@ -6,7 +7,10 @@ export default function Layout(): JSX.Element {
     <div style={styles.shell}>
       <Sidebar />
       <main style={styles.main}>
-        <Outlet />
+        {/* Pages load from local disk, so render nothing rather than flash a spinner */}
+        <Suspense fallback={null}>
+          <Outlet />
+        </Suspense>
       </main>
     </div>
   )
