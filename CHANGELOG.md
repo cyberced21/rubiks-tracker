@@ -11,6 +11,11 @@ All notable changes to Rubiks Tracker will be documented in this file.
 - Save/open dialogs are now modal to the app window
 - Scramble generation: cubing.js's search worker failed to start because it loaded the app entry
   chunk (`document is not defined`)
+- Backups now finish writing before they're reported as done
+- Restoring a backup no longer risks replaying the old database's WAL onto the restored data; the
+  file is checked first (invalid files are rejected without touching your data), and the current
+  data is saved as a `pre-restore-*` backup before it is replaced
+- Solve paging values are bound as SQL parameters, and an offset without a limit now works
 
 ### Changed
 - Switched to pnpm as the single package manager

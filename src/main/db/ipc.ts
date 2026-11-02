@@ -19,7 +19,6 @@ import {
   restoreBackup,
   listBackups
 } from './queries'
-import { initDatabase } from './schema'
 import { writeFileSync } from 'fs'
 
 export function registerIpcHandlers(): void {
@@ -105,11 +104,7 @@ export function registerIpcHandlers(): void {
       { title: 'Restore backup', filters: [{ name: 'Database', extensions: ['db'] }], properties: ['openFile'] }
     )
     if (canceled || filePaths.length === 0) return null
-    const success = restoreBackup(filePaths[0])
-    if (success) {
-      initDatabase() // Reopen the restored DB
-    }
-    return success
+    return restoreBackup(filePaths[0])
   })
 }
 

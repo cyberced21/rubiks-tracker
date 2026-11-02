@@ -129,6 +129,7 @@ export default function Settings(): JSX.Element {
             <ActionButton label="Restore" onClick={async () => {
               const ok = await window.api.restoreBackup()
               if (ok) { window.location.reload() }
+              else if (ok === false) { alert('That file is not a valid Rubiks Tracker backup. Your data was not changed.') }
             }} />
           </SettingRow>
         </section>

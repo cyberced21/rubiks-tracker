@@ -28,7 +28,10 @@ const mockApi = {
   restoreBackup: vi.fn(),
 }
 
-Object.defineProperty(window, 'api', {
-  value: mockApi,
-  writable: true,
-})
+// Main-process tests opt into the node environment, where there is no window
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'api', {
+    value: mockApi,
+    writable: true,
+  })
+}

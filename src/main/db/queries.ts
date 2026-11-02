@@ -1,7 +1,8 @@
-import { getDb, getDbPath } from './schema'
+import Database from 'better-sqlite3'
+import { getDb, getDbPath, initDatabase } from './schema'
 import { app } from 'electron'
 import { join } from 'path'
-import { copyFileSync, existsSync } from 'fs'
+import { copyFileSync, existsSync, mkdirSync, readdirSync, renameSync, rmSync, statSync } from 'fs'
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -123,10 +124,14 @@ export function getSolves(filters: SolveFilters): Solve[] {
   }
 
   const where = conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''
-  const limit = filters.limit ? `LIMIT ${filters.limit}` : ''
-  const offset = filters.offset ? `OFFSET ${filters.offset}` : ''
+  // SQLite only accepts OFFSET after LIMIT; -1 means no limit
+  let paging = ''
+  if (filters.limit || filters.offset) {
+    paging = 'LIMIT ? OFFSET ?'
+    params.push(filters.limit || -1, filters.offset || 0)
+  }
 
-  const sql = `SELECT * FROM solves ${where} ORDER BY created_at ASC ${limit} ${offset}`
+  const sql = `SELECT * FROM solves ${where} ORDER BY created_at ASC ${paging}`
   return db.prepare(sql).all(...params) as Solve[]
 }
 
@@ -219,31 +224,70 @@ export function exportSolvesAsCsv(filters?: SolveFilters): string {
 
 // ── Backup / Restore ────────────────────────────────────────────────────────
 
-export function createBackup(): string {
-  const db = getDb()
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+function getBackupDir(): string {
   const backupDir = join(app.getPath('userData'), 'backups')
-  const { mkdirSync } = require('fs')
   mkdirSync(backupDir, { recursive: true })
-  const backupPath = join(backupDir, `rubiks-tracker-${timestamp}.db`)
-  db.backup(backupPath)
+  return backupDir
+}
+
+export async function createBackup(prefix = 'rubiks-tracker'): Promise<string> {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
+  const backupPath = join(getBackupDir(), `${prefix}-${timestamp}.db`)
+  await getDb().backup(backupPath)
   return backupPath
 }
 
-export function restoreBackup(backupPath: string): boolean {
+// A usable backup is an intact SQLite file that has this app's core tables
+function isValidBackup(path: string): boolean {
+  let candidate: Database.Database | undefined
+  try {
+    candidate = new Database(path, { fileMustExist: true })
+    const check = candidate.pragma('quick_check', { simple: true })
+    const tables = candidate
+      .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('sessions', 'solves')")
+      .all()
+    return check === 'ok' && tables.length === 2
+  } catch {
+    return false
+  } finally {
+    candidate?.close()
+  }
+}
+
+/**
+ * Replace the live database with a backup file and reopen it. Returns false,
+ * leaving the current data untouched, when the file isn't a valid backup.
+ */
+export async function restoreBackup(backupPath: string): Promise<boolean> {
   if (!existsSync(backupPath)) return false
   const dbPath = getDbPath()
-  // Close current DB, copy backup over, reopen
+
+  // Validate a staged copy so the user's file is never touched, and so the
+  // final swap is a same-volume rename rather than a partial overwrite
+  const stagedPath = `${dbPath}.restoring`
+  copyFileSync(backupPath, stagedPath)
+  if (!isValidBackup(stagedPath)) {
+    rmSync(stagedPath, { force: true })
+    return false
+  }
+
+  await createBackup('pre-restore')
+
   getDb().close()
-  copyFileSync(backupPath, dbPath)
-  // Caller must reinit the database after restore
+  try {
+    // Leftover WAL pages from the old database would be replayed onto the
+    // restored one, so drop them along with the shared-memory index
+    rmSync(`${dbPath}-wal`, { force: true })
+    rmSync(`${dbPath}-shm`, { force: true })
+    renameSync(stagedPath, dbPath)
+  } finally {
+    initDatabase()
+  }
   return true
 }
 
 export function listBackups(): { path: string; name: string; created: number }[] {
-  const backupDir = join(app.getPath('userData'), 'backups')
-  const { readdirSync, statSync, mkdirSync } = require('fs')
-  mkdirSync(backupDir, { recursive: true })
+  const backupDir = getBackupDir()
   const files = readdirSync(backupDir) as string[]
   return files
     .filter((f: string) => f.endsWith('.db'))
