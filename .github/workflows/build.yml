@@ -104,7 +104,16 @@ jobs:
         run: pnpm build
 
       - name: Package
-        run: pnpm ${{ matrix.script }}
+        # Expressions can't omit an env var, so unconfigured signing secrets
+        # arrive as empty strings. electron-builder treats a defined but empty
+        # CSC_LINK as a certificate path (the working directory) and fails, so
+        # drop empty signing variables to get ad-hoc signing instead.
+        shell: bash
+        run: |
+          for name in CSC_LINK CSC_KEY_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
+            if [ -z "${!name}" ]; then unset "$name"; fi
+          done
+          pnpm ${{ matrix.script }}
         env:
           # Windows release builds are signed with Azure Artifact Signing when
           # configured (see README). Signing is skipped while the variable is empty.
