@@ -3,6 +3,7 @@ import { vi } from 'vitest'
 
 // Mock the Electron preload API
 const mockApi = {
+  platform: 'linux',
   createSession: vi.fn(),
   getSessions: vi.fn().mockResolvedValue([]),
   deleteSession: vi.fn(),
@@ -28,7 +29,10 @@ const mockApi = {
   restoreBackup: vi.fn(),
 }
 
-Object.defineProperty(window, 'api', {
-  value: mockApi,
-  writable: true,
-})
+// Main-process tests opt into the node environment, where there is no window
+if (typeof window !== 'undefined') {
+  Object.defineProperty(window, 'api', {
+    value: mockApi,
+    writable: true,
+  })
+}

@@ -1,7 +1,6 @@
 /**
  * Generates a Rubik's cube app icon as PNG and ICO.
  * Run: node scripts/generate-icon/index.js
- * Requires: npm install --save-dev sharp
  */
 const sharp = require('sharp')
 const fs = require('fs')
@@ -83,9 +82,9 @@ async function generate() {
   const pngPath = path.join(resourcesDir, 'icon.png')
   const icoPath = path.join(resourcesDir, 'icon.ico')
 
-  // Generate main 256px PNG
-  const svg256 = buildSvg(256)
-  await sharp(Buffer.from(svg256)).png().toFile(pngPath)
+  // Main PNG is 1024px: electron-builder needs at least 512px to build the
+  // macOS .icns, and derives the Linux icon sizes from it too
+  await sharp(Buffer.from(buildSvg(1024))).png().toFile(pngPath)
   console.log(`✓ PNG saved: ${pngPath}`)
 
   // Generate multiple sizes for ICO

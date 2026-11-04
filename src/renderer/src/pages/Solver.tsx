@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, type JSX } from 'react'
 import { experimentalSolve3x3x3IgnoringCenters } from 'cubing/search'
 import { Alg } from 'cubing/alg'
 
@@ -189,12 +189,11 @@ interface FaceGridProps {
   label: string
   base: number
   facelets: string[]
-  selectedColor: string
   onCellClick: (idx: number) => void
   size?: number
 }
 
-function FaceGrid({ label, base, facelets, selectedColor, onCellClick, size = 32 }: FaceGridProps) {
+function FaceGrid({ label, base, facelets, onCellClick, size = 32 }: FaceGridProps) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
       <span style={{ fontSize: 10, color: 'var(--text-muted)', letterSpacing: 1 }}>{label}</span>
@@ -334,18 +333,18 @@ export default function Solver(): JSX.Element {
           <div style={styles.net}>
             {/* Top row: U face */}
             <div style={styles.netTopRow}>
-              <FaceGrid label="U" base={FACE_BASES.U} facelets={facelets} selectedColor={selectedColor} onCellClick={handleCellClick} />
+              <FaceGrid label="U" base={FACE_BASES.U} facelets={facelets} onCellClick={handleCellClick} />
             </div>
             {/* Middle row: L F R B */}
             <div style={styles.netMiddleRow}>
-              <FaceGrid label="L" base={FACE_BASES.L} facelets={facelets} selectedColor={selectedColor} onCellClick={handleCellClick} />
-              <FaceGrid label="F" base={FACE_BASES.F} facelets={facelets} selectedColor={selectedColor} onCellClick={handleCellClick} />
-              <FaceGrid label="R" base={FACE_BASES.R} facelets={facelets} selectedColor={selectedColor} onCellClick={handleCellClick} />
-              <FaceGrid label="B" base={FACE_BASES.B} facelets={facelets} selectedColor={selectedColor} onCellClick={handleCellClick} />
+              <FaceGrid label="L" base={FACE_BASES.L} facelets={facelets} onCellClick={handleCellClick} />
+              <FaceGrid label="F" base={FACE_BASES.F} facelets={facelets} onCellClick={handleCellClick} />
+              <FaceGrid label="R" base={FACE_BASES.R} facelets={facelets} onCellClick={handleCellClick} />
+              <FaceGrid label="B" base={FACE_BASES.B} facelets={facelets} onCellClick={handleCellClick} />
             </div>
             {/* Bottom row: D face */}
             <div style={styles.netTopRow}>
-              <FaceGrid label="D" base={FACE_BASES.D} facelets={facelets} selectedColor={selectedColor} onCellClick={handleCellClick} />
+              <FaceGrid label="D" base={FACE_BASES.D} facelets={facelets} onCellClick={handleCellClick} />
             </div>
           </div>
 

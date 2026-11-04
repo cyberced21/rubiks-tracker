@@ -2,6 +2,48 @@
 
 All notable changes to Rubiks Tracker will be documented in this file.
 
+## [1.2.0] - 2026-11-04
+
+### Fixed
+- Linux AppImage builds: better-sqlite3 13 ships N-API prebuilds for every platform, so the
+  Windows-only native rebuild postinstall script is gone
+- Preload API typings now include the export and backup methods
+- Save/open dialogs are now modal to the app window
+- Scramble generation: cubing.js's search worker failed to start because it loaded the app entry
+  chunk (`document is not defined`)
+- Backups now finish writing before they're reported as done
+- Restoring a backup no longer risks replaying the old database's WAL onto the restored data; the
+  file is checked first (invalid files are rejected without touching your data), and the current
+  data is saved as a `pre-restore-*` backup before it is replaced
+- Solve paging values are bound as SQL parameters, and an offset without a limit now works
+
+### Added
+- macOS builds: DMGs for Apple Silicon and Intel, built in CI next to Windows and Linux. They're
+  ad-hoc signed by default, and signed and notarized when an Apple Developer ID is configured.
+  On macOS the sidebar header leaves room for the window controls and drags the window.
+
+### Security
+- Only `http`/`https` links open externally, and the window can no longer be navigated away from
+  the app
+- Production builds ship a Content-Security-Policy
+- Only one instance of the app can run, so two copies never open the same database
+- CI jobs are read-only; only the release upload job can write to the repository
+
+### Changed
+- Switched to pnpm as the single package manager
+- Upgraded to Electron 44, React 19, React Router 8, Vite 7, electron-vite 5, Vitest 5,
+  TypeScript 7, electron-builder 26, cubing 0.63 and lucide-react 1.x
+- CI runs typecheck and tests, and builds installers on pull requests
+- Merging a version bump into `master` publishes the release automatically (see README → Releasing)
+- Hardened packaged builds with Electron fuses (no run-as-node, no NODE_OPTIONS / inspect flags)
+- Removed unused zustand and @electron-toolkit/preload dependencies
+- Renderer runs with Electron's process sandbox enabled
+- Pages are lazy-loaded and the renderer bundle is minified (entry chunk 1 MB → 270 KB)
+- Packaged app payload shrank from 84 MB to 6 MB: renderer libraries are no longer shipped twice,
+  and only the target platform's SQLite binary is included
+- Packaging config moved to `electron-builder.ts`; Windows release builds can be signed with
+  Azure Artifact Signing
+
 ## [1.0.0] - 2026-05-27
 
 ### Added

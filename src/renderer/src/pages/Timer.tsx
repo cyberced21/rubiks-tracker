@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, type JSX } from 'react'
 import { randomScrambleForEvent } from 'cubing/scramble'
 import { Plus, Trash2, ChevronDown } from 'lucide-react'
 import { useTimer } from '../hooks/useTimer'
 import { computeStats } from '../utils/stats'
 import { formatTime, formatSolveTime, formatInspection } from '../utils/time'
-import type { Session, Solve } from '../types'
+import type { Penalty, Session, Solve } from '../types'
 
 // ── Cube type → cubing.js event ID ───────────────────────────────────────────
 const CUBE_EVENT: Record<string, string> = { '3x3': '333' }
@@ -81,7 +81,7 @@ export default function Timer(): JSX.Element {
     async (timeMs: number, timerPenalty: 'none' | '+2' | 'dnf') => {
       if (!activeSessionId) return
       // Combine timer penalty with any inspection penalty
-      const pen =
+      const pen: Penalty =
         timerPenalty === 'dnf'
           ? 'dnf'
           : inspectionPenaltyRef.current === 'dnf'
@@ -189,7 +189,6 @@ export default function Timer(): JSX.Element {
 
   // ── Derived display values ────────────────────────────────────────────────
   const stats = computeStats(solves)
-  const activeSession = sessions.find((s) => s.id === activeSessionId)
   const recentSolves = [...solves].reverse().slice(0, 15)
 
   const { display: inspDisplay, penalty: inspPen } = formatInspection(inspectionElapsed)
@@ -245,7 +244,7 @@ export default function Timer(): JSX.Element {
 
           {/* Cube type */}
           <div style={{ ...s.selectorWrap, opacity: 0.6, pointerEvents: 'none' }}>
-            <select style={s.select} value={activeCubeType} readOnly>
+            <select style={s.select} value={activeCubeType} disabled>
               <option value="3x3">3x3</option>
             </select>
             <ChevronDown size={12} style={s.chevron} />
@@ -416,7 +415,6 @@ function SolveRow({
 }): JSX.Element {
   const [hovered, setHovered] = useState(false)
   const time = formatSolveTime(solve.time_ms, solve.penalty)
-  const penClass = solve.penalty === 'dnf' ? 'text-red' : solve.penalty === '+2' ? 'text-yellow' : ''
 
   return (
     <div

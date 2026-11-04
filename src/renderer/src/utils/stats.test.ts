@@ -11,7 +11,7 @@ function makeSolve(timeMs: number, penalty: 'none' | '+2' | 'dnf' = 'none', id =
     time_ms: timeMs,
     penalty,
     created_at: Date.now(),
-    note: null,
+    comment: null,
   }
 }
 

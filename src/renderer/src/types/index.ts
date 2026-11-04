@@ -34,11 +34,12 @@ export interface AlgorithmProgress {
   last_practiced_at: number | null
 }
 
+// Parsed form of the settings table (stored as strings in the DB)
 export interface AppSettings {
-  inspection_enabled: string    // 'true' | 'false'
-  timer_hold_ms: string         // milliseconds as string
+  inspection_enabled: boolean
+  timer_hold_ms: number
   active_cube_type: CubeType
-  active_session_id: string     // number as string
+  active_session_id: number
 }
 
 // ── Timer state ───────────────────────────────────────────────────────────────

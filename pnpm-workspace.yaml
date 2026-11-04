@@ -1,5 +1,5 @@
+nodeLinker: hoisted
+
 allowBuilds:
-  better-sqlite3: false
-  electron: false
-  esbuild: false
-  sharp: false
+  electron-winstaller: false
+  esbuild: true

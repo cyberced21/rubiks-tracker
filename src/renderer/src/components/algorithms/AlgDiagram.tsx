@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type JSX } from 'react'
 
 // Register cubing.js TwistyPlayer web component once
 let registered = false

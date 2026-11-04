@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, type JSX } from 'react'
 import { BookOpen, Zap, Star, RotateCcw, Check } from 'lucide-react'
 import {
   ALL_ALGORITHMS,
