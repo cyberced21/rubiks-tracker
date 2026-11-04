@@ -48,7 +48,9 @@ const onlyPrebuild = (target: string): string[] => [
 const config: Configuration = {
   appId: 'com.rubiks-tracker',
   productName: 'Rubiks Tracker',
-  artifactName: '${productName}-${version}-${os}-${arch}.${ext}',
+  // The package name, not productName: GitHub turns the space in
+  // "Rubiks Tracker" into a dot when the file is attached to a release
+  artifactName: '${name}-${version}-${os}-${arch}.${ext}',
   // better-sqlite3 uses N-API prebuilds, so nothing needs rebuilding for Electron
   npmRebuild: false,
   electronFuses: {

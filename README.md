@@ -88,9 +88,9 @@ variables instead.
 
 Grab the latest installer from the [Releases](https://github.com/cyberced21/rubiks-tracker/releases) page:
 
-- **Windows:** `Rubiks Tracker-<version>-win-x64.exe`
-- **Linux:** `Rubiks Tracker-<version>-linux-x86_64.AppImage` (`chmod +x` it, then run)
-- **macOS:** `Rubiks Tracker-<version>-mac-arm64.dmg` for Apple Silicon, `-mac-x64.dmg` for Intel.
+- **Windows:** `rubiks-tracker-<version>-win-x64.exe`
+- **Linux:** `rubiks-tracker-<version>-linux-x86_64.AppImage` (`chmod +x` it, then run)
+- **macOS:** `rubiks-tracker-<version>-mac-arm64.dmg` for Apple Silicon, `-mac-x64.dmg` for Intel.
   Until the DMGs are signed, macOS reports the app as damaged or from an unidentified developer on
   first launch; after dragging it to Applications, run
   `xattr -dr com.apple.quarantine "/Applications/Rubiks Tracker.app"` once.
