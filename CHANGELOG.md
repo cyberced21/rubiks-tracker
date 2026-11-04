@@ -2,6 +2,12 @@
 
 All notable changes to Rubiks Tracker will be documented in this file.
 
+## [Unreleased]
+
+### Changed
+- Installers are named `rubiks-tracker-<version>-<os>-<arch>`, without the space that GitHub
+  turned into a dot in release downloads (`Rubiks.Tracker-…`)
+
 ## [1.2.0] - 2026-11-04
 
 ### Fixed
