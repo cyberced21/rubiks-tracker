@@ -3,6 +3,7 @@ import { vi } from 'vitest'
 
 // Mock the Electron preload API
 const mockApi = {
+  platform: 'linux',
   createSession: vi.fn(),
   getSessions: vi.fn().mockResolvedValue([]),
   deleteSession: vi.fn(),

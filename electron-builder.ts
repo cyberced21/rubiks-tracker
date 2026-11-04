@@ -1,4 +1,4 @@
-import type { Configuration, WindowsConfiguration } from 'electron-builder'
+import type { Configuration, MacConfiguration, WindowsConfiguration } from 'electron-builder'
 
 // Windows signing via Azure Artifact Signing (formerly Trusted Signing).
 // Enabled only when AZURE_SIGNING_ENDPOINT is set; credentials are read by the
@@ -26,6 +26,16 @@ function azureSignOptions(): WindowsConfiguration['azureSignOptions'] {
     certificateProfileName: env.AZURE_SIGNING_CERT_PROFILE!,
     publisherName: env.AZURE_SIGNING_PUBLISHER!
   }
+}
+
+// macOS signing uses a Developer ID certificate from CSC_LINK / CSC_KEY_PASSWORD,
+// and electron-builder notarizes when APPLE_ID, APPLE_APP_SPECIFIC_PASSWORD and
+// APPLE_TEAM_ID are set. Without a certificate the app is ad-hoc signed, which
+// Apple Silicon requires for it to launch at all.
+const hasMacCertificate = Boolean(process.env.CSC_LINK)
+
+function macIdentity(): MacConfiguration['identity'] {
+  return hasMacCertificate ? undefined : '-'
 }
 
 // better-sqlite3 ships prebuilt binaries for every platform; keep only the
@@ -57,6 +67,18 @@ const config: Configuration = {
     icon: 'resources/icon.ico',
     files: onlyPrebuild('win32'),
     azureSignOptions: azureSignOptions()
+  },
+  mac: {
+    // One DMG per architecture rather than a universal build: the two SQLite
+    // binaries differ, and a universal bundle would carry both
+    target: [{ target: 'dmg', arch: ['arm64', 'x64'] }],
+    icon: 'resources/icon.png',
+    category: 'public.app-category.utilities',
+    files: onlyPrebuild('darwin'),
+    identity: macIdentity(),
+    // Required for notarization; with ad-hoc signing its library validation
+    // would refuse to load the SQLite native module
+    hardenedRuntime: hasMacCertificate
   },
   linux: {
     target: 'AppImage',

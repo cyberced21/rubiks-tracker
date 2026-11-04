@@ -1,6 +1,8 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
 const api = {
+  platform: process.platform,
+
   // Sessions
   createSession: (name: string, cubeType: string) =>
     ipcRenderer.invoke('db:session:create', name, cubeType),

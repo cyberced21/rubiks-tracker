@@ -10,10 +10,14 @@ const NAV_ITEMS = [
   { to: '/settings',    label: 'Settings',    Icon: Settings }
 ]
 
+// macOS hides the title bar ('hiddenInset'), so the traffic lights sit over the
+// top of the sidebar and the logo area doubles as the window's drag handle
+const isMac = window.api.platform === 'darwin'
+
 export default function Sidebar(): JSX.Element {
   return (
     <nav style={styles.sidebar}>
-      <div style={styles.logo}>
+      <div style={isMac ? { ...styles.logo, ...styles.logoMac } : styles.logo}>
         <span style={styles.logoIcon}>⬛</span>
         <span style={styles.logoText}>RubiksTracker</span>
       </div>
@@ -67,6 +71,10 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '20px 20px 24px',
     borderBottom: '1px solid var(--border-subtle)'
   },
+  logoMac: {
+    paddingTop: 44,
+    WebkitAppRegion: 'drag'
+  } as React.CSSProperties,
   logoIcon: {
     fontSize: 20
   },

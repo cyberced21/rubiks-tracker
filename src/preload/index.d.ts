@@ -16,6 +16,8 @@ interface BackupInfo {
 declare global {
   interface Window {
     api: {
+      platform: string
+
       createSession: (name: string, cubeType: string) => Promise<Session>
       getSessions: (cubeType?: string) => Promise<Session[]>
       deleteSession: (id: number) => Promise<void>

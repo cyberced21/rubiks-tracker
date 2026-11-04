@@ -1,20 +1,66 @@
 name: Build and Release
 
+# Every push to master builds the installers. When package.json carries a
+# version that has no tag yet, that run also publishes it as a GitHub release,
+# so releasing is: bump the version, add its CHANGELOG section, merge.
 on:
-  release:
-    types: [created]
+  push:
+    branches: [master]
   pull_request:
   workflow_dispatch:
 
+# Read-only by default; only the release job can write to the repository
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # Never cancel a master run halfway through publishing a release
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+      release: ${{ steps.check.outputs.release }}
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Decide whether this run publishes a release
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ON_MASTER: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$version" --silent 2>/dev/null; then
+            echo "Version $version is already released; merging will only build." >> "$GITHUB_STEP_SUMMARY"
+            echo "release=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Fail before building anything if the release would have no notes
+          if ! grep -q "^## \[$version\]" CHANGELOG.md; then
+            echo "::error file=CHANGELOG.md::No '## [$version]' section for the unreleased version in package.json"
+            exit 1
+          fi
+
+          if [ "$ON_MASTER" = "true" ]; then
+            echo "Publishing release $version." >> "$GITHUB_STEP_SUMMARY"
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Merging into master will publish release $version." >> "$GITHUB_STEP_SUMMARY"
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build:
+    needs: version
     strategy:
       fail-fast: false
       matrix:
@@ -25,11 +71,18 @@ jobs:
           - os: ubuntu-latest
             script: build:linux
             artifact: dist/*.AppImage
+          # Apple Silicon runner; the Intel DMG is cross-packaged since nothing
+          # is compiled (SQLite ships prebuilt binaries for both architectures)
+          - os: macos-latest
+            script: build:mac
+            artifact: dist/*.dmg
 
     runs-on: ${{ matrix.os }}
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
 
       - uses: pnpm/action-setup@v6
 
@@ -55,24 +108,66 @@ jobs:
         env:
           # Windows release builds are signed with Azure Artifact Signing when
           # configured (see README). Signing is skipped while the variable is empty.
-          AZURE_SIGNING_ENDPOINT: ${{ github.event_name == 'release' && vars.AZURE_SIGNING_ENDPOINT || '' }}
+          AZURE_SIGNING_ENDPOINT: ${{ needs.version.outputs.release == 'true' && vars.AZURE_SIGNING_ENDPOINT || '' }}
           AZURE_SIGNING_ACCOUNT: ${{ vars.AZURE_SIGNING_ACCOUNT }}
           AZURE_SIGNING_CERT_PROFILE: ${{ vars.AZURE_SIGNING_CERT_PROFILE }}
           AZURE_SIGNING_PUBLISHER: ${{ vars.AZURE_SIGNING_PUBLISHER }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          # macOS release builds are signed and notarized when an Apple Developer ID
+          # certificate is configured; otherwise they're ad-hoc signed. Scoped to the
+          # macOS job because electron-builder would also try CSC_LINK on Windows.
+          CSC_LINK: ${{ needs.version.outputs.release == 'true' && matrix.os == 'macos-latest' && secrets.MAC_CERTIFICATE || '' }}
+          CSC_KEY_PASSWORD: ${{ needs.version.outputs.release == 'true' && matrix.os == 'macos-latest' && secrets.MAC_CERTIFICATE_PASSWORD || '' }}
+          APPLE_ID: ${{ needs.version.outputs.release == 'true' && matrix.os == 'macos-latest' && secrets.APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ needs.version.outputs.release == 'true' && matrix.os == 'macos-latest' && secrets.APPLE_APP_SPECIFIC_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ needs.version.outputs.release == 'true' && matrix.os == 'macos-latest' && vars.APPLE_TEAM_ID || '' }}
 
       - name: Upload build artifact
-        if: github.event_name != 'release'
         uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.os }}-installer
           path: ${{ matrix.artifact }}
+          if-no-files-found: error
           retention-days: 7
 
-      - name: Upload installer to release
-        if: github.event_name == 'release'
+  release:
+    if: needs.version.outputs.release == 'true'
+    needs: [version, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Extract release notes from CHANGELOG
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          awk -v heading="## [$VERSION]" '
+            index($0, heading) == 1 { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > release-notes.md
+          test -s release-notes.md
+
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: '*-installer'
+          path: dist
+          merge-multiple: true
+
+      - name: Publish release
         uses: softprops/action-gh-release@v3
         with:
-          files: ${{ matrix.artifact }}
+          tag_name: ${{ needs.version.outputs.version }}
+          name: ${{ needs.version.outputs.version }}
+          target_commitish: ${{ github.sha }}
+          body_path: release-notes.md
+          files: dist/*
+          fail_on_unmatched_files: true
+          make_latest: true
