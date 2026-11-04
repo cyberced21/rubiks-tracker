@@ -123,6 +123,10 @@ jobs:
           APPLE_ID: ${{ needs.version.outputs.release == 'true' && matrix.os == 'macos-latest' && secrets.APPLE_ID || '' }}
           APPLE_APP_SPECIFIC_PASSWORD: ${{ needs.version.outputs.release == 'true' && matrix.os == 'macos-latest' && secrets.APPLE_APP_SPECIFIC_PASSWORD || '' }}
           APPLE_TEAM_ID: ${{ needs.version.outputs.release == 'true' && matrix.os == 'macos-latest' && vars.APPLE_TEAM_ID || '' }}
+          # electron-builder skips all signing on pull requests, ad-hoc included,
+          # which leaves Apple Silicon DMGs unlaunchable. PRs never get the secrets
+          # above, so forcing it can only ever ad-hoc sign.
+          CSC_FOR_PULL_REQUEST: 'true'
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v7
